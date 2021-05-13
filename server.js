@@ -19,20 +19,23 @@ const HTTP_PORT = process.env.PORT || 8080;
 app.use(express.json());
 app.use(cors());
 
-const RestaurantDB = require('./restaurantDB.js');
+const RestaurantDB = require('./modules/restaurantDB.js');
 
 const db = new RestaurantDB(
   'mongodb+srv://haeun1303:0704@cluster0.m2rfz.mongodb.net/sample_restaurants?retryWrites=true&w=majority'
 );
 
 app.get('/', (req, res) => {
-  res.json({ message: 'API Listeneing' });
+  res.json({ message: 'API Listening' });
 });
 
-app.post('/api/restaurants/', (req, res) => {
+//POST
+app.post('/api/restaurants', (req, res) => {
   db.addNewRestaurant(req.body)
-    .then(() => {
-      res.status(201).json(`added`);
+    .then((result) => {
+      res.status(201).json({
+        message: result,
+      });
     })
     .catch((err) => {
       console.log(err);
@@ -40,8 +43,9 @@ app.post('/api/restaurants/', (req, res) => {
     });
 });
 
-app.get('/api/restaurants/', (req, res) => {
-  db.getAllRestaurants(req.params.id)
+//GET
+app.get('/api/restaurants', (req, res) => {
+  db.getAllRestaurants(req.query.page, req.query.perPage, req.query.borough)
     .then((rest) => {
       res.status(201).json(rest);
     })
@@ -51,8 +55,9 @@ app.get('/api/restaurants/', (req, res) => {
     });
 });
 
+//GET WITH ID
 app.get('/api/restaurants/:id', (req, res) => {
-  db.getRestaurantById()
+  db.getRestaurantById(req.params.id)
     .then((rest) => {
       res.status(201).json(rest);
     })
@@ -62,6 +67,7 @@ app.get('/api/restaurants/:id', (req, res) => {
     });
 });
 
+//put
 app.put('/api/restaurants/:id', (req, res) => {
   db.updateRestaurantById(req.params.id)
     .then((rest) => {
@@ -73,6 +79,7 @@ app.put('/api/restaurants/:id', (req, res) => {
     });
 });
 
+//delete
 app.delete('/api/restaurants/:id', (req, res) => {
   db.deleteRestaurantById(req.params.id)
     .then((rest) => {
@@ -84,6 +91,7 @@ app.delete('/api/restaurants/:id', (req, res) => {
     });
 });
 
+//initilalize the service & start the server
 db.initialize()
   .then(() => {
     app.listen(HTTP_PORT, () => {
